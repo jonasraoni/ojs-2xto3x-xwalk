@@ -68,69 +68,79 @@
 
   <xsl:template match="article | paper">
     <xsl:param name="date_published" />
-    <article stage="submission">
-      <xsl:choose>
-        <xsl:when test="string-length(parent::section/abbrev)">
-          <xsl:attribute name="section_ref">
-            <xsl:value-of select="parent::section/abbrev" />
-          </xsl:attribute>
-        </xsl:when>
-        <xsl:when test="string-length($section_ref)">
-          <xsl:attribute name="section_ref">
-            <xsl:value-of select="$section_ref" />
-          </xsl:attribute>
-        </xsl:when>
-      </xsl:choose>
-      <xsl:choose>
-        <xsl:when test="string-length(date_published)">
-          <xsl:attribute name="date_published">
-            <xsl:value-of select="date_published" />
-          </xsl:attribute>
-        </xsl:when>
-        <xsl:when test="string-length($date_published)">
-          <xsl:attribute name="date_published">
-            <xsl:value-of select="$date_published" />
-          </xsl:attribute>
-        </xsl:when>
-      </xsl:choose>
-      <xsl:if test="string-length($seq)">
-        <xsl:attribute name="seq">
-          <xsl:value-of select="$seq" />
-        </xsl:attribute>
-      </xsl:if>
-      <xsl:if test="string-length($access_status)">
-        <xsl:attribute name="access_status">
-          <xsl:value-of select="$access_status" />
-        </xsl:attribute>
-      </xsl:if>
-      <xsl:copy-of select="@*" />
-      <!-- <xsl:if test="not(@language) and string-length(title/@locale)"> -->
-      <!--   <xsl:attribute name="language"> -->
-      <!--     <xsl:value-of select="substring(title/@locale, 1, 2)" /> -->
-      <!--   </xsl:attribute> -->
-      <!-- </xsl:if> -->
-      <xsl:if test="not(@locale) and string-length(title/@locale)">
-        <xsl:attribute name="locale">
-          <xsl:value-of select="title/@locale" />
-        </xsl:attribute>
-      </xsl:if>
-      <xsl:apply-templates select="title"/>
-      <xsl:apply-templates select="abstract"/>
-      <xsl:apply-templates select="permissions"/>
-      <xsl:apply-templates select="indexing/subject"/>
-      <xsl:if test="count(author) !=0">
-        <authors>
-          <xsl:apply-templates select="author" />
-        </authors>
-      </xsl:if>
+    <article stage="production" current_publication_id="1" submission_progress="0" status="3">
       <xsl:apply-templates select="galley"/>
-      <xsl:if test="not(ancestor::issue) and string-length($volume) and string-length($number) and string-length($year)">
-        <issue_identification>
-          <volume><xsl:value-of select="$volume" /></volume>
-          <number><xsl:value-of select="$number" /></number>
-          <year><xsl:value-of select="$year" /></year>
-        </issue_identification>
-      </xsl:if>
+      <publication version="1" status="3">
+        <xsl:choose>
+          <xsl:when test="string-length(parent::section/abbrev)">
+            <xsl:attribute name="section_ref">
+              <xsl:value-of select="parent::section/abbrev" />
+            </xsl:attribute>
+          </xsl:when>
+          <xsl:when test="string-length($section_ref)">
+            <xsl:attribute name="section_ref">
+              <xsl:value-of select="$section_ref" />
+            </xsl:attribute>
+          </xsl:when>
+        </xsl:choose>
+        <xsl:choose>
+          <xsl:when test="string-length(date_published)">
+            <xsl:attribute name="date_published">
+              <xsl:value-of select="date_published" />
+            </xsl:attribute>
+          </xsl:when>
+          <xsl:when test="string-length($date_published)">
+            <xsl:attribute name="date_published">
+              <xsl:value-of select="$date_published" />
+            </xsl:attribute>
+          </xsl:when>
+        </xsl:choose>
+        <xsl:if test="string-length($seq)">
+          <xsl:attribute name="seq">
+            <xsl:value-of select="$seq" />
+          </xsl:attribute>
+        </xsl:if>
+        <xsl:if test="string-length($access_status)">
+          <xsl:attribute name="access_status">
+            <xsl:value-of select="$access_status" />
+          </xsl:attribute>
+        </xsl:if>
+        <xsl:copy-of select="@*" />
+        <!-- <xsl:if test="not(@language) and string-length(title/@locale)"> -->
+        <!--   <xsl:attribute name="language"> -->
+        <!--     <xsl:value-of select="substring(title/@locale, 1, 2)" /> -->
+        <!--   </xsl:attribute> -->
+        <!-- </xsl:if> -->
+        <xsl:if test="not(@locale) and string-length(title/@locale)">
+          <xsl:attribute name="locale">
+            <xsl:value-of select="title/@locale" />
+          </xsl:attribute>
+        </xsl:if>
+        <id type="internal" advice="ignore">1</id>
+        <xsl:apply-templates select="title"/>
+        <xsl:apply-templates select="abstract"/>
+        <xsl:apply-templates select="permissions"/>
+        <xsl:apply-templates select="indexing/subject"/>
+        <xsl:if test="count(author) !=0">
+          <authors>
+            <xsl:apply-templates select="author" />
+          </authors>
+        </xsl:if>
+        <xsl:for-each select="galley">
+        <article_galley>
+          <name locale="en_US"><xsl:value-of select="label" /></name>
+          <seq><xsl:value-of select="position()-1" /></seq>
+          <submission_file_ref id="{position()}" revision="1"/>
+        </article_galley>
+        </xsl:for-each>
+        <xsl:if test="not(ancestor::issue) and string-length($volume) and string-length($number) and string-length($year)">
+          <issue_identification>
+            <volume><xsl:value-of select="$volume" /></volume>
+            <number><xsl:value-of select="$number" /></number>
+            <year><xsl:value-of select="$year" /></year>
+          </issue_identification>
+        </xsl:if>
+      </publication>
     </article>
   </xsl:template>
 
@@ -144,15 +154,17 @@
   <xsl:template match="abstract">
     <abstract>
       <xsl:copy-of select="@*" />
-      <xsl:apply-templates />
+      &lt;p&gt;
+        <xsl:apply-templates />
+      &lt;/p&gt;
     </abstract>
   </xsl:template>
 
   <xsl:template match="author">
-    <author user_group_ref="Author">
+    <author include_in_browse="true" user_group_ref="Author" seq="{position()-1}" id="1">
       <xsl:copy-of select="@*" />
       <xsl:if test="string-length(firstname)">
-        <givenname>
+        <givenname locale="en_US">
           <xsl:if test="string-length(ancestor::article/@locale)">
             <xsl:attribute name="locale">
               <xsl:value-of select="ancestor::article/@locale" />
@@ -162,7 +174,7 @@
         </givenname>
       </xsl:if>
       <xsl:if test="string-length(lastname)">
-        <familyname>
+        <familyname locale="en_US">
           <xsl:if test="string-length(ancestor::article/@locale)">
             <xsl:attribute name="locale">
               <xsl:value-of select="ancestor::article/@locale" />
@@ -171,7 +183,17 @@
           <xsl:value-of select="lastname" />
         </familyname>
       </xsl:if>
-      <xsl:apply-templates select="affiliation | country | email" mode="copy"/>
+      <xsl:if test="string-length(affiliation)">
+        <affiliation locale="en_US">
+          <xsl:if test="string-length(ancestor::article/@locale)">
+            <xsl:attribute name="locale">
+              <xsl:value-of select="ancestor::article/@locale" />
+            </xsl:attribute>
+          </xsl:if>
+          <xsl:value-of select="affiliation" />
+        </affiliation>
+      </xsl:if>
+      <xsl:apply-templates select="country | email" mode="copy"/>
       <xsl:if test="not(string-length(email))">
         <email>email.address@example.com</email>
       </xsl:if>
@@ -229,23 +251,6 @@
 
   <xsl:template match="permissions">
       <xsl:apply-templates select="license_url | copyright_holder | *"/>
-  </xsl:template>
-
-  <xsl:template match="galley">
-    <xsl:apply-templates select="file" />
-  </xsl:template>
-
-  <xsl:template match="file">
-    <submission_file stage="submission" id="{position()}">
-      <revision number="1" genre="Article Text">
-        <xsl:apply-templates select="embed | href" />
-      </revision>
-    </submission_file>
-    <article_galley>
-      <name locale="en_US">PDF</name>
-      <seq>0</seq>
-      <submission_file_ref id="{position()}" revision="1"/>
-    </article_galley>
   </xsl:template>
 
   <xsl:template match="embed">
@@ -307,6 +312,18 @@
         <xsl:value-of select="$fn" />
       </xsl:otherwise>
     </xsl:choose>
+  </xsl:template>
+
+  <xsl:template match="galley">
+    <xsl:apply-templates select="file" />
+  </xsl:template>
+
+  <xsl:template match="file">
+    <submission_file stage="submission" id="{count(../preceding-sibling::galley)+1}">
+      <revision number="1" genre="Article Text" viewable="true">
+        <xsl:apply-templates select="embed | href" />
+      </revision>
+    </submission_file>
   </xsl:template>
 
 </xsl:stylesheet>
